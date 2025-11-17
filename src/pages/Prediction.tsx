@@ -20,6 +20,24 @@ const Prediction = () => {
   };
 
   const handleConfirm = () => {
+    // Save prediction to localStorage
+    const predictions = JSON.parse(localStorage.getItem('predictions') || '[]');
+    const newPrediction = {
+      id: Date.now(),
+      matchId: match.id,
+      home: match.home,
+      away: match.away,
+      homeLogo: match.homeLogo,
+      awayLogo: match.awayLogo,
+      prediction: selected,
+      status: 'pending',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      homeScore: null,
+      awayScore: null,
+    };
+    predictions.unshift(newPrediction);
+    localStorage.setItem('predictions', JSON.stringify(predictions));
+
     toast.success("Prediction submitted successfully!", {
       description: `You predicted ${selected === 'home' ? match.home : selected === 'away' ? match.away : 'Draw'} to win!`,
     });

@@ -1,27 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TabBar } from "@/components/TabBar";
-import { Clock, CheckCircle } from "lucide-react";
+import { Clock, CheckCircle, HourglassIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const Results = () => {
   const navigate = useNavigate();
-  const [filterTab, setFilterTab] = useState<"all" | "correct" | "wrong">("all");
+  const [filterTab, setFilterTab] = useState<"all" | "correct" | "wrong" | "pending">("all");
+  const [userPredictions, setUserPredictions] = useState<any[]>([]);
 
-  const allResults = [
-    { id: 1, home: 'Arsenal', away: 'Brentford', homeScore: 3, awayScore: 1, prediction: 'home', result: 'correct', date: 'Nov 5', homeLogo: '🔴', awayLogo: '🐝' },
-    { id: 2, home: 'Liverpool', away: 'Brighton', homeScore: 2, awayScore: 2, prediction: 'home', result: 'wrong', date: 'Nov 4', homeLogo: '❤️', awayLogo: '⚪' },
-    { id: 3, home: 'Man City', away: 'Tottenham', homeScore: 4, awayScore: 0, prediction: 'home', result: 'correct', date: 'Nov 3', homeLogo: '💙', awayLogo: '⚪' },
-    { id: 4, home: 'Chelsea', away: 'Newcastle', homeScore: 1, awayScore: 1, prediction: 'draw', result: 'correct', date: 'Nov 3', homeLogo: '🔵', awayLogo: '⚫' },
-    { id: 5, home: 'Man United', away: 'Aston Villa', homeScore: 0, awayScore: 2, prediction: 'home', result: 'wrong', date: 'Nov 2', homeLogo: '🔴', awayLogo: '🦁' },
+  useEffect(() => {
+    // Load predictions from localStorage
+    const predictions = JSON.parse(localStorage.getItem('predictions') || '[]');
+    setUserPredictions(predictions);
+  }, []);
+
+  const mockResults = [
+    { id: 1, home: 'Arsenal', away: 'Brentford', homeScore: 3, awayScore: 1, prediction: 'home', status: 'correct', date: 'Nov 5', homeLogo: '🔴', awayLogo: '🐝' },
+    { id: 2, home: 'Liverpool', away: 'Brighton', homeScore: 2, awayScore: 2, prediction: 'home', status: 'wrong', date: 'Nov 4', homeLogo: '❤️', awayLogo: '⚪' },
+    { id: 3, home: 'Man City', away: 'Tottenham', homeScore: 4, awayScore: 0, prediction: 'home', status: 'correct', date: 'Nov 3', homeLogo: '💙', awayLogo: '⚪' },
+    { id: 4, home: 'Chelsea', away: 'Newcastle', homeScore: 1, awayScore: 1, prediction: 'draw', status: 'correct', date: 'Nov 3', homeLogo: '🔵', awayLogo: '⚫' },
+    { id: 5, home: 'Man United', away: 'Aston Villa', homeScore: 0, awayScore: 2, prediction: 'home', status: 'wrong', date: 'Nov 2', homeLogo: '🔴', awayLogo: '🦁' },
   ];
+
+  // Combine user predictions and mock results
+  const allResults = [...userPredictions, ...mockResults];
 
   const filteredResults = filterTab === 'all'
     ? allResults
-    : allResults.filter(m => m.result === filterTab);
+    : allResults.filter(m => m.status === filterTab);
 
-  const correctCount = allResults.filter(m => m.result === 'correct').length;
-  const wrongCount = allResults.filter(m => m.result === 'wrong').length;
+  const correctCount = allResults.filter(m => m.status === 'correct').length;
+  const wrongCount = allResults.filter(m => m.status === 'wrong').length;
+  const pendingCount = allResults.filter(m => m.status === 'pending').length;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -30,29 +41,33 @@ const Results = () => {
         <p className="text-primary-foreground/80">Premier League 2024/25</p>
 
         {/* Stats Summary */}
-        <div className="mt-4 grid grid-cols-3 gap-3">
+        <div className="mt-4 grid grid-cols-4 gap-2">
           <div className="bg-primary-foreground/20 backdrop-blur rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold text-primary-foreground">{allResults.length}</div>
+            <div className="text-xl font-bold text-primary-foreground">{allResults.length}</div>
             <div className="text-xs text-primary-foreground/80">Total</div>
           </div>
           <div className="bg-primary-foreground/20 backdrop-blur rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold text-primary-foreground">{correctCount}</div>
+            <div className="text-xl font-bold text-primary-foreground">{correctCount}</div>
             <div className="text-xs text-primary-foreground/80">Correct</div>
           </div>
           <div className="bg-primary-foreground/20 backdrop-blur rounded-xl p-3 text-center">
-            <div className="text-2xl font-bold text-primary-foreground">{wrongCount}</div>
+            <div className="text-xl font-bold text-primary-foreground">{wrongCount}</div>
             <div className="text-xs text-primary-foreground/80">Wrong</div>
+          </div>
+          <div className="bg-primary-foreground/20 backdrop-blur rounded-xl p-3 text-center">
+            <div className="text-xl font-bold text-primary-foreground">{pendingCount}</div>
+            <div className="text-xs text-primary-foreground/80">Pending</div>
           </div>
         </div>
       </div>
 
       {/* Filter Tabs */}
       <div className="px-6 py-4 bg-card border-b border-border">
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto">
           <button
             onClick={() => setFilterTab('all')}
             className={cn(
-              "px-4 py-2 rounded-lg font-semibold text-sm transition-all",
+              "px-4 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap",
               filterTab === 'all'
                 ? "bg-gradient-primary text-primary-foreground shadow-medium"
                 : "bg-muted text-muted-foreground hover:text-foreground"
@@ -61,9 +76,20 @@ const Results = () => {
             All ({allResults.length})
           </button>
           <button
+            onClick={() => setFilterTab('pending')}
+            className={cn(
+              "px-4 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap",
+              filterTab === 'pending'
+                ? "bg-warning text-warning-foreground shadow-medium"
+                : "bg-muted text-muted-foreground hover:text-foreground"
+            )}
+          >
+            ⏳ Pending ({pendingCount})
+          </button>
+          <button
             onClick={() => setFilterTab('correct')}
             className={cn(
-              "px-4 py-2 rounded-lg font-semibold text-sm transition-all",
+              "px-4 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap",
               filterTab === 'correct'
                 ? "bg-success text-success-foreground shadow-medium"
                 : "bg-muted text-muted-foreground hover:text-foreground"
@@ -74,7 +100,7 @@ const Results = () => {
           <button
             onClick={() => setFilterTab('wrong')}
             className={cn(
-              "px-4 py-2 rounded-lg font-semibold text-sm transition-all",
+              "px-4 py-2 rounded-lg font-semibold text-sm transition-all whitespace-nowrap",
               filterTab === 'wrong'
                 ? "bg-destructive text-destructive-foreground shadow-medium"
                 : "bg-muted text-muted-foreground hover:text-foreground"
@@ -99,7 +125,12 @@ const Results = () => {
                   {match.date} • FULL TIME
                 </span>
               </div>
-              {match.result === 'correct' ? (
+              {match.status === 'pending' ? (
+                <span className="bg-warning/20 text-warning text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                  <HourglassIcon className="w-3 h-3" />
+                  Pending
+                </span>
+              ) : match.status === 'correct' ? (
                 <span className="bg-success-light text-success text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
                   <CheckCircle className="w-3 h-3" />
                   +3pts
@@ -118,7 +149,7 @@ const Results = () => {
               </div>
               <div className="px-4">
                 <div className="text-3xl font-bold text-foreground">
-                  {match.homeScore} - {match.awayScore}
+                  {match.status === 'pending' ? 'vs' : `${match.homeScore} - ${match.awayScore}`}
                 </div>
               </div>
               <div className="text-center flex-1">
