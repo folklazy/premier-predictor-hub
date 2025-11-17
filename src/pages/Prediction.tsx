@@ -23,7 +23,7 @@ const Prediction = () => {
     toast.success("Prediction submitted successfully!", {
       description: `You predicted ${selected === 'home' ? match.home : selected === 'away' ? match.away : 'Draw'} to win!`,
     });
-    setTimeout(() => navigate("/"), 1500);
+    setTimeout(() => navigate("/results"), 1500);
   };
 
   return (
